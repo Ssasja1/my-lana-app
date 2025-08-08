@@ -7,7 +7,7 @@ import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
 import { useClientOnlyValue } from '@/components/useClientOnlyValue';
 
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
+// Puedes explorar los iconos en https://icons.expo.fyi/
 function TabBarIcon(props: {
   name: React.ComponentProps<typeof FontAwesome>['name'];
   color: string;
@@ -22,36 +22,49 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
         headerShown: useClientOnlyValue(false, true),
-      }}>
+      }}
+    >
       <Tabs.Screen
-        name="index"
+        name="Inicio"
         options={{
-          title: 'Tab One',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
-          headerRight: () => (
-            <Link href="/modal" asChild>
-              <Pressable>
-                {({ pressed }) => (
-                  <FontAwesome
-                    name="info-circle"
-                    size={25}
-                    color={Colors[colorScheme ?? 'light'].text}
-                    style={{ marginRight: 15, opacity: pressed ? 0.5 : 1 }}
-                  />
-                )}
-              </Pressable>
-            </Link>
-          ),
+          title: 'Inicio',
+          tabBarIcon: ({ color }) => <TabBarIcon name="home" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="two"
+        name="Balance"
         options={{
-          title: 'Tab Two',
-          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,
+          title: 'Balance',
+          tabBarIcon: ({ color }) => <TabBarIcon name="balance-scale" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Graficas"
+        options={{
+          title: 'Gráficas',
+          tabBarIcon: ({ color }) => <TabBarIcon name="pie-chart" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="MostrarPagoFijo"
+        options={{
+          title: 'Pagos Fijos',
+          tabBarIcon: ({ color }) => <TabBarIcon name="calendar" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="MostrarPresupuestoMensual"
+        options={{
+          title: 'Presupuesto',
+          tabBarIcon: ({ color }) => <TabBarIcon name="money" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="MostrarTransacciones"
+        options={{
+          title: 'Transacciones',
+          tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
         }}
       />
     </Tabs>

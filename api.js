@@ -2,8 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configuración base de la API
-//const API_BASE_URL = 'http://localhost:8000'; // Cambia esto por tu URL real
-const API_BASE_URL = 'http://192.168.68.108:8000';
+const API_BASE_URL = 'http://localhost:8000'; // Cambia esto por tu URL real
+//const API_BASE_URL = 'http://192.168.68.108:8000';
 
 
 // Instancia de Axios
@@ -198,5 +198,34 @@ export const deleteTransaccion = async (transaccionId) => {
     await api.delete(`/transacciones/${transaccionId}`);
   } catch (error) {
     handleApiError(error, 'Error al eliminar la transacción');
+  }
+};
+
+export const createCategoria = async (categoriaData) => {
+  try {
+    const response = await api.post('/categorias', categoriaData);
+    return response.data;
+  } catch (error) {
+    handleApiError(error, 'Error al crear la categoría');
+  }
+};
+
+
+export const updateCategoria = async (categoriaId, updatedData) => {
+  try {
+    const response = await api.put(`/categorias/${categoriaId}`, updatedData);
+    return response.data;
+  } catch (error) {
+    handleApiError(error, 'Error al actualizar la categoría');
+  }
+};
+
+
+// Eliminar una categoría
+export const deleteCategoria = async (categoriaId) => {
+  try {
+    await api.delete(`/categorias/${categoriaId}`);
+  } catch (error) {
+    handleApiError(error, 'Error al eliminar la categoría');
   }
 };

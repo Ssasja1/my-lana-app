@@ -2,6 +2,7 @@ import React from 'react';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { Link, Tabs } from 'expo-router';
 import { Pressable } from 'react-native';
+import { useRouter } from 'expo-router';
 
 import Colors from '@/constants/Colors';
 import { useColorScheme } from '@/components/useColorScheme';
@@ -14,6 +15,7 @@ function TabBarIcon(props: {
 }) {
   return <FontAwesome size={28} style={{ marginBottom: -3 }} {...props} />;
 }
+const router = useRouter();
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
@@ -65,6 +67,24 @@ export default function TabLayout() {
         options={{
           title: 'Transacciones',
           tabBarIcon: ({ color }) => <TabBarIcon name="list" color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="Categorias"
+        options={{
+          title: 'Categorías',
+          tabBarIcon: ({ color }) => <TabBarIcon name="tags" color={color} />,
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push('/Registros/RegistroCategorias')}
+              style={({ pressed }) => ({
+                opacity: pressed ? 0.5 : 1,
+                marginRight: 15,
+              })}
+            >
+              <FontAwesome name="plus" size={24} color={Colors[colorScheme ?? 'light'].text} />
+            </Pressable>
+          ),
         }}
       />
     </Tabs>

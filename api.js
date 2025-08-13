@@ -2,8 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configuración base de la API
-const API_BASE_URL = 'http://localhost:8000'; // Cambia esto por tu URL real
-//const API_BASE_URL = 'http://192.168.68.108:8000';
+//const API_BASE_URL = 'http://localhost:8000'; // Cambia esto por tu URL real
+const API_BASE_URL = 'http://192.168.68.102:8000';
 
 
 // Instancia de Axios

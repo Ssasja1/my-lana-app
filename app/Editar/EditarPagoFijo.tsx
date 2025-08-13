@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker'; // Importa el picker
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { getPagosFijos, updatePagoFijo } from '../../api';
 
-// Define el tipo de datos
 type PagoFijo = {
   id: number;
   nombre: string;
@@ -20,7 +20,8 @@ export default function EditarPagoFijo() {
 
   const [nombre, setNombre] = useState('');
   const [monto, setMonto] = useState('');
-  const [fechaPago, setFechaPago] = useState('');
+  const [fechaPago, setFechaPago] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [activo, setActivo] = useState(true);
   const [categoriaId, setCategoriaId] = useState('');
 
@@ -33,7 +34,7 @@ export default function EditarPagoFijo() {
         if (pago) {
           setNombre(pago.nombre);
           setMonto(pago.monto.toString());
-          setFechaPago(pago.fecha_pago);
+          setFechaPago(new Date(pago.fecha_pago)); // Convierte a Date
           setActivo(pago.activo);
           setCategoriaId(pago.categoria_id.toString());
         } else {
@@ -56,7 +57,7 @@ export default function EditarPagoFijo() {
       const data = {
         nombre,
         monto: parseFloat(monto),
-        fecha_pago: fechaPago,
+        fecha_pago: fechaPago.toISOString().slice(0, 10), // Formato YYYY-MM-DD
         activo,
         categoria_id: parseInt(categoriaId),
       };
@@ -67,6 +68,14 @@ export default function EditarPagoFijo() {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       Alert.alert('Error', message);
+    }
+  };
+
+  // Cuando cambia la fecha en el DatePicker
+  const onChangeDate = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios'); // en iOS se queda abierto
+    if (selectedDate) {
+      setFechaPago(selectedDate);
     }
   };
 
@@ -87,12 +96,25 @@ export default function EditarPagoFijo() {
         value={monto}
         onChangeText={setMonto}
       />
-      <TextInput
-        style={styles.input}
-        placeholder="Fecha de Pago (YYYY-MM-DD)"
-        value={fechaPago}
-        onChangeText={setFechaPago}
-      />
+
+      <TouchableOpacity
+        style={[styles.input, { justifyContent: 'center' }]}
+        onPress={() => setShowDatePicker(true)}
+      >
+        <Text>{fechaPago.toISOString().slice(0, 10)}</Text>
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={fechaPago}
+          mode="date"
+          display="default"
+          onChange={onChangeDate}
+          maximumDate={new Date(2100, 12, 31)}
+          minimumDate={new Date(2000, 0, 1)}
+        />
+      )}
+
       <TextInput
         style={styles.input}
         placeholder="ID Categoría"

@@ -12,6 +12,8 @@ type Transaccion = {
   tipo: string; // 'ingreso' | 'egreso'
 };
 
+const API_BASE_URL = 'http://192.168.68.102:8000'; // IP de tu backend
+
 const cerrarSesion = async () => {
   await AsyncStorage.removeItem('userToken');
   router.replace('/inicio/LoginScreen'); // Redirige al login
@@ -28,7 +30,7 @@ const HomeScreen = () => {
         const token = await AsyncStorage.getItem('userToken');
         if (!token) throw new Error('No autenticado');
 
-        const res = await fetch('http://localhost:8000/transacciones/', {
+        const res = await fetch(`${API_BASE_URL}/transacciones/`, {
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
@@ -86,7 +88,6 @@ const HomeScreen = () => {
         >
           <Text style={styles.buttonText}>Ver Pagos Fijos</Text>
         </TouchableOpacity>
-        
       </View>
 
       <TouchableOpacity style={styles.logoutButton} onPress={cerrarSesion}>

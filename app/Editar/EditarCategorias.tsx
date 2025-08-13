@@ -8,6 +8,8 @@ type Categoria = {
   descripcion?: string;
 };
 
+const API_BASE_URL = 'http://192.168.68.102:8000';// <-- IP del backend
+
 export default function EditarCategoria() {
   const params = useLocalSearchParams();
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -19,7 +21,7 @@ export default function EditarCategoria() {
   useEffect(() => {
     const cargarDatos = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/categorias/${id}`);
+        const res = await fetch(`${API_BASE_URL}/categorias/${id}`);
         if (!res.ok) throw new Error('Categoría no encontrada');
         const categoria: Categoria = await res.json();
         setNombre(categoria.nombre);
@@ -40,7 +42,7 @@ export default function EditarCategoria() {
       return;
     }
     try {
-      const res = await fetch(`http://localhost:8000/categorias/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/categorias/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nombre, descripcion }),

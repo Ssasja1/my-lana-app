@@ -7,7 +7,6 @@ import {
   ActivityIndicator,
   Alert,
   TouchableOpacity,
-  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getCategorias, deleteCategoria } from '../../api';
@@ -21,7 +20,6 @@ export default function MostrarCategorias() {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [menuVisibleId, setMenuVisibleId] = useState<number | null>(null);
 
   const router = useRouter();
 
@@ -60,7 +58,6 @@ export default function MostrarCategorias() {
           onPress: async () => {
             try {
               await deleteCategoria(id);
-              setMenuVisibleId(null);
               await cargarCategorias();
               Alert.alert('Éxito', 'Categoría eliminada');
             } catch (error) {
@@ -74,7 +71,6 @@ export default function MostrarCategorias() {
   };
 
   const handleEdit = (categoria: Categoria) => {
-    setMenuVisibleId(null);
     router.push({
       pathname: '/Editar/EditarCategorias',
       params: { id: categoria.id.toString() },
@@ -83,37 +79,22 @@ export default function MostrarCategorias() {
 
   const renderItem = ({ item }: { item: Categoria }) => (
     <View style={styles.card}>
-      <View style={styles.cardContent}>
-        <Text style={styles.title}>{item.nombre}</Text>
+      <Text style={styles.title}>{item.nombre}</Text>
 
-        <View style={styles.optionsContainer}>
-          <TouchableOpacity
-            style={styles.optionsButton}
-            onPress={() => setMenuVisibleId(menuVisibleId === item.id ? null : item.id)}
-          >
-            <Text style={styles.optionsButtonText}>⋮</Text>
-          </TouchableOpacity>
+      <View style={styles.actionsContainer}>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.editButton]}
+          onPress={() => handleEdit(item)}
+        >
+          <Text style={styles.actionText}>Editar</Text>
+        </TouchableOpacity>
 
-          {menuVisibleId === item.id && (
-            <>
-              <Pressable style={styles.overlay} onPress={() => setMenuVisibleId(null)} />
-              <View style={styles.dropdown}>
-                <TouchableOpacity
-                  style={styles.dropdownItem}
-                  onPress={() => handleEdit(item)}
-                >
-                  <Text style={styles.dropdownText}>Editar</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.dropdownItem, styles.deleteItem]}
-                  onPress={() => handleDelete(item.id)}
-                >
-                  <Text style={styles.deleteText}>Eliminar</Text>
-                </TouchableOpacity>
-              </View>
-            </>
-          )}
-        </View>
+        <TouchableOpacity
+          style={[styles.actionButton, styles.deleteButton]}
+          onPress={() => handleDelete(item.id)}
+        >
+          <Text style={styles.actionText}>Eliminar</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -180,93 +161,40 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: '#ffffff',
-    padding: 30,          // aumentado para card más grande
-    borderRadius: 15,
-    marginBottom: 20,
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 12,
     shadowColor: '#000000',
-    shadowOpacity: 0.12,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 8,
-    elevation: 5,
-    overflow: 'visible',
-    zIndex: 1,
-  },
-  cardContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    position: 'relative',
-    overflow: 'visible',
-    zIndex: 10,
+    shadowOpacity: 0.08,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 2,
   },
   title: {
     fontWeight: '700',
-    fontSize: 22,         // texto más grande para título
-    flex: 1,
+    fontSize: 22,
     color: '#1f2937',
+    marginBottom: 10,
   },
-  optionsContainer: {
-    position: 'relative',
-    width: 40,
-    alignItems: 'flex-end',
+  actionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
   },
-  optionsButton: {
-    padding: 14,          // botón más grande y cómodo
-    borderRadius: 30,
-    backgroundColor: '#e2e8f0',
-    width: 48,
-    height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
+  actionButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 6,
   },
-  optionsButtonText: {
-    fontSize: 28,         // símbolo más grande
-    color: '#6b7280',
-    marginTop: -4,
+  editButton: {
+    backgroundColor: '#3b82f6',
   },
-  overlay: {
-    position: 'absolute',
-    top: -600,
-    left: -600,
-    right: -600,
-    bottom: -600,
-    backgroundColor: 'transparent',
-    zIndex: 998,
+  deleteButton: {
+    backgroundColor: '#ef4444',
   },
-  dropdown: {
-    position: 'absolute',
-    top: 56,              // ajustado al botón más grande
-    right: 0,
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    zIndex: 999,
-    elevation: 10,
-    width: 160,           // ancho mayor para mejor visibilidad
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 5 },
-    shadowRadius: 10,
-    overflow: 'visible',
-  },
-  dropdownItem: {
-    paddingVertical: 16,  // padding aumentado para items más grandes
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  deleteItem: {
-    borderBottomWidth: 0,
-  },
-  dropdownText: {
-    fontSize: 18,         // texto más grande para lectura clara
-    color: '#374151',
-  },
-  deleteText: {
-    fontSize: 18,
-    color: '#ef4444',
-    fontWeight: '700',
+  actionText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   button: {
     backgroundColor: '#10b981',

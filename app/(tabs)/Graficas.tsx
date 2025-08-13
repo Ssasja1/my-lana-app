@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BarChart, PieChart } from "react-native-chart-kit";
 
 type GastoMensual = {
@@ -43,11 +43,28 @@ const colores = [
 ];
 
 const screenWidth = Dimensions.get("window").width;
+const API_BASE_URL = 'http://192.168.68.102:8000';
+
+// 🔹 Función para ajustar valores muy pequeños
+const ajustarDatosPie = (data: any[], accessor: string) => {
+  const total = data.reduce((sum, item) => sum + Math.abs(item[accessor]), 0);
+  return data.map((item) => {
+    const porcentaje = (Math.abs(item[accessor]) / total) * 100;
+    if (porcentaje < 5) {
+      // Forzar un mínimo del 5% visualmente
+      return { ...item, [accessor]: (5 / 100) * total };
+    }
+    return item;
+  });
+};
 
 export default function Graficas() {
   const [gastosMensuales, setGastosMensuales] = useState<GastoMensual[]>([]);
-  const [gastosPorCategoria, setGastosPorCategoria] = useState<CategoriaGasto[]>([]);
-  const [resumenIngresosGastos, setResumenIngresosGastos] = useState<ResumenIngresosGastos | null>(null);
+  const [gastosPorCategoria, setGastosPorCategoria] = useState<CategoriaGasto[]>(
+    []
+  );
+  const [resumenIngresosGastos, setResumenIngresosGastos] =
+    useState<ResumenIngresosGastos | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,53 +72,55 @@ export default function Graficas() {
       try {
         setLoading(true);
 
-        // Obtener token de AsyncStorage
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem("userToken");
         if (!token) throw new Error("No autenticado");
 
         const headers = {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         };
 
-        // Gastos mensuales
         const resMensuales = await fetch(
-          "http://localhost:8000/graficas/gastos-mensuales/",
+          `${API_BASE_URL}/graficas/gastos-mensuales/`,
           { headers }
         );
-        if (!resMensuales.ok) throw new Error("Error al cargar gastos mensuales");
+        if (!resMensuales.ok)
+          throw new Error("Error al cargar gastos mensuales");
         const dataMensuales: GastoMensual[] = await resMensuales.json();
 
-        // Gastos por categoría
         const resCategorias = await fetch(
-          "http://localhost:8000/graficas/gastos-por-categoria/",
+          `${API_BASE_URL}/graficas/gastos-por-categoria/`,
           { headers }
         );
-        if (!resCategorias.ok) throw new Error("Error al cargar gastos por categoría");
-        const dataCategoriasRaw: { categoria: string; total: number }[] = await resCategorias.json();
+        if (!resCategorias.ok)
+          throw new Error("Error al cargar gastos por categoría");
+        const dataCategoriasRaw: { categoria: string; total: number }[] =
+          await resCategorias.json();
 
-        const dataCategorias: CategoriaGasto[] = dataCategoriasRaw.map((item, index) => ({
-          name: item.categoria,
-          gasto: item.total,
-          color: colores[index % colores.length],
-          legendFontColor: "#333",
-          legendFontSize: 14,
-        }));
+        const dataCategorias: CategoriaGasto[] = dataCategoriasRaw.map(
+          (item, index) => ({
+            name: item.categoria,
+            gasto: Math.abs(item.total), // aseguramos positivo
+            color: colores[index % colores.length],
+            legendFontColor: "#333",
+            legendFontSize: 14,
+          })
+        );
 
-        // Resumen ingresos y gastos
         const resResumen = await fetch(
-          "http://localhost:8000/graficas/resumen-ingresos-gastos/",
+          `${API_BASE_URL}/graficas/resumen-ingresos-gastos/`,
           { headers }
         );
-        if (!resResumen.ok) throw new Error("Error al cargar resumen de ingresos y gastos");
+        if (!resResumen.ok)
+          throw new Error("Error al cargar resumen de ingresos y gastos");
         const resumenData: ResumenIngresosGastos = await resResumen.json();
 
         setGastosMensuales(dataMensuales);
         setGastosPorCategoria(dataCategorias);
         setResumenIngresosGastos(resumenData);
-
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Error desconocido";
+        const message =
+          error instanceof Error ? error.message : "Error desconocido";
         Alert.alert("Error", message);
       } finally {
         setLoading(false);
@@ -111,7 +130,29 @@ export default function Graficas() {
     fetchDatos();
   }, []);
 
-  // Datos para gráfica de barras (gastos mensuales)
+  const pieData =
+    resumenIngresosGastos && resumenIngresosGastos.ingresos !== undefined
+      ? ajustarDatosPie(
+          [
+            {
+              name: "Ingresos",
+              gasto: Math.abs(resumenIngresosGastos.ingresos),
+              color: "#4CAF50",
+              legendFontColor: "#333",
+              legendFontSize: 14,
+            },
+            {
+              name: "Gastos",
+              gasto: Math.abs(resumenIngresosGastos.gastos),
+              color: "#F44336",
+              legendFontColor: "#333",
+              legendFontSize: 14,
+            },
+          ],
+          "gasto"
+        )
+      : [];
+
   const barData = {
     labels: gastosMensuales.map((g) => g.mes),
     datasets: [
@@ -121,27 +162,6 @@ export default function Graficas() {
     ],
   };
 
-  // Datos para gráfica de pastel (ingresos vs gastos)
-  const pieData =
-    resumenIngresosGastos
-      ? [
-          {
-            name: "Ingresos",
-            gasto: resumenIngresosGastos.ingresos,
-            color: "#4CAF50",
-            legendFontColor: "#333",
-            legendFontSize: 14,
-          },
-          {
-            name: "Gastos",
-            gasto: resumenIngresosGastos.gastos,
-            color: "#F44336",
-            legendFontColor: "#333",
-            legendFontSize: 14,
-          },
-        ]
-      : [];
-
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.header}>Resumen Visual</Text>
@@ -150,46 +170,42 @@ export default function Graficas() {
         <ActivityIndicator size="large" color="#2ecc71" />
       ) : (
         <>
-          {/* Gráfica de Gastos Mensuales */}
           <View style={styles.graphCard}>
             <Text style={styles.graphTitle}>Gastos Mensuales</Text>
             {gastosMensuales.length === 0 ? (
-              <Text style={styles.placeholderText}>No hay datos para mostrar</Text>
+              <Text style={styles.placeholderText}>
+                No hay datos para mostrar
+              </Text>
             ) : (
               <BarChart
                 data={barData}
                 width={screenWidth - 40}
                 height={220}
                 yAxisLabel="$"
-                yAxisSuffix=""
+                yAxisSuffix="" // ← propiedad obligatoria
                 chartConfig={{
                   backgroundGradientFrom: "#fff",
                   backgroundGradientTo: "#fff",
                   decimalPlaces: 2,
                   color: (opacity = 1) => `rgba(46, 204, 113, ${opacity})`,
-                  labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-                  style: {
-                    borderRadius: 12,
-                  },
-                  propsForDots: {
-                    r: "6",
-                    strokeWidth: "2",
-                    stroke: "#2ecc71",
-                  },
+                  labelColor: (opacity = 1) =>
+                    `rgba(0, 0, 0, ${opacity})`,
+                  style: { borderRadius: 12 },
                 }}
                 style={{ borderRadius: 12 }}
               />
             )}
           </View>
 
-          {/* Gráfica de Gastos por Categoría */}
           <View style={styles.graphCard}>
             <Text style={styles.graphTitle}>Distribución por Categoría</Text>
             {gastosPorCategoria.length === 0 ? (
-              <Text style={styles.placeholderText}>No hay datos para mostrar</Text>
+              <Text style={styles.placeholderText}>
+                No hay datos para mostrar
+              </Text>
             ) : (
               <PieChart
-                data={gastosPorCategoria}
+                data={ajustarDatosPie(gastosPorCategoria, "gasto")}
                 width={screenWidth - 40}
                 height={220}
                 chartConfig={{
@@ -203,11 +219,12 @@ export default function Graficas() {
             )}
           </View>
 
-          {/* Gráfica de Proporción Ingresos vs Gastos */}
           <View style={styles.graphCard}>
             <Text style={styles.graphTitle}>Proporción Ingresos vs Gastos</Text>
             {pieData.length === 0 ? (
-              <Text style={styles.placeholderText}>No hay datos para mostrar</Text>
+              <Text style={styles.placeholderText}>
+                No hay datos para mostrar
+              </Text>
             ) : (
               <PieChart
                 data={pieData}
